@@ -74,7 +74,21 @@ if (NODE_VERSION_MAJOR < 12 || require('worker_threads').isMainThread) {
   }
 }
 
-if (process.env.PKG_EXECPATH === EXECPATH) {
+if (process.send) {
+  // if process.send is set, it means the process was forked,
+  // and the runtime file is the third argument
+
+  for (let i = 2; i < process.argv.length; i += 1) {
+    if (process.argv[i].indexOf('--') === 0) {
+      // arguments to node. move PKG_DUMMY_ENTRYPOINT up
+      const tmp = process.argv[i - 1];
+      process.argv[i - 1] = process.argv[i];
+      process.argv[i] = tmp;
+    } else {
+      break;
+    }
+  }
+} else if (process.env.PKG_EXECPATH === EXECPATH) {
   process.argv.splice(1, 1);
 
   if (process.argv[1] && process.argv[1] !== '-') {
